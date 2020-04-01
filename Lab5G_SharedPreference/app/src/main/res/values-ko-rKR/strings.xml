@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Lab5G_SharedPreference</string>
+    <string name="hello_new_user">만나서 반갑습니다</string>
+    <string name="hello_user">오늘도 감사합니다</string>
+</resources>
