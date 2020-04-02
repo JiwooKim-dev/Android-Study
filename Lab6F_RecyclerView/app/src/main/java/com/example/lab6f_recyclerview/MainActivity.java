@@ -1,6 +1,7 @@
 package com.example.lab6f_recyclerview;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.os.Bundle;
@@ -10,6 +11,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.example.lab6f_recyclerview.model.PostItem;
+import com.example.lab6f_recyclerview.recyclerview.PostAdapter;
 
 import java.util.ArrayList;
 
@@ -34,6 +36,8 @@ public class MainActivity extends AppCompatActivity {
         /* 포스트 화면에 출력 */
 
         RecyclerView rvList = findViewById(R.id.rv_list);
-
+        PostAdapter adapter = new PostAdapter(this, listItem);
+        rvList.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
+        rvList.setAdapter(adapter);
     }
 }
