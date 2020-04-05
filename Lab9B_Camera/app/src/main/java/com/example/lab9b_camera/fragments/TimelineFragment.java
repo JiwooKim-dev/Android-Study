@@ -1,10 +1,16 @@
 package com.example.lab9b_camera.fragments;
 
+import android.app.Activity;
+import android.content.Intent;
+import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.provider.MediaStore;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -29,7 +35,29 @@ public class TimelineFragment extends Fragment {
         rvList.setLayoutManager(new LinearLayoutManager(getActivity()));
         rvList.setAdapter(new PostAdapter(getActivity(), getSamplePosts()));
 
+        baseView.findViewById(R.id.fab_post).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                if (cameraIntent.resolveActivity(getActivity().getPackageManager()) != null){   // intent에 걸린 액티비티 확인
+                    startActivityForResult(cameraIntent, 1000);
+                }
+            }
+        });
+
         return baseView;
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (resultCode == Activity.RESULT_OK && requestCode == 1000){
+            Bundle extras = data.getExtras();
+            Log.d("onActivityResult", "카메라 성공");
+        }
     }
 
     private ArrayList getSamplePosts() {
