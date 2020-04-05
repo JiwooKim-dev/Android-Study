@@ -31,6 +31,9 @@ import java.util.ArrayList;
 
 public class TimelineFragment extends Fragment {
 
+    static final int REQUEST_PERMISSIONS = 1;
+    static final int REQUEST_CAMERA_ACTIVITY = 2;
+
     public TimelineFragment() {
     }
 
@@ -54,8 +57,8 @@ public class TimelineFragment extends Fragment {
                     startCameraActivity();
                 } else {
                     ActivityCompat.requestPermissions(getActivity(),
-                            new String[]{Manifest.permission.READ_EXTERNAL_STORAGE,
-                                    Manifest.permission.CAMERA}, 2000);
+                            new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                                    Manifest.permission.CAMERA}, REQUEST_PERMISSIONS);
                 }
             }
         });
@@ -67,7 +70,7 @@ public class TimelineFragment extends Fragment {
 
         Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         if (cameraIntent.resolveActivity(getActivity().getPackageManager()) != null) {   // intent에 걸린 액티비티 확인
-            startActivityForResult(cameraIntent, 1000);
+            startActivityForResult(cameraIntent, 2);
         }
     }
 
@@ -75,7 +78,7 @@ public class TimelineFragment extends Fragment {
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
-        if (requestCode == 2000 && grantResults.length > 0){
+        if (requestCode == 1 && grantResults.length > 0){
             startCameraActivity();
         }
     }
@@ -85,7 +88,7 @@ public class TimelineFragment extends Fragment {
         super.onActivityResult(requestCode, resultCode, data);
 
         // Main (TimelineFrag) -> Camera -> Main -> Post
-        if (resultCode == Activity.RESULT_OK && requestCode == 1000){
+        if (resultCode == Activity.RESULT_OK && requestCode == 2){
 
             Intent startIntent = new Intent(getActivity(), PostActivity.class);
             Bitmap imgBitmap = (Bitmap) data.getExtras().get("data");
