@@ -5,24 +5,27 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.content.FileProvider;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.queenstagram.PostActivity;
 import com.example.queenstagram.api.Api;
-import com.example.queenstagram.posts.PostItem;
 import com.example.queenstagram.posts.recyclerview.PostAdapter;
 import com.example.queenstagram.R;
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -31,7 +34,11 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 
+import java.io.File;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 
 public class TimelineFragment extends Fragment {
 
@@ -103,21 +110,64 @@ public class TimelineFragment extends Fragment {
 
 
     /* 카메라 액티비티 */
-    private void startCameraActivity() {
 
-        Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        if (cameraIntent.resolveActivity(getActivity().getPackageManager()) != null) {   // intent에 걸린 액티비티 확인
-            startActivityForResult(cameraIntent, 2);
-        }
-    }
+    File tempFile;
+    Bundle extras;
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
-        if (requestCode == 1 && grantResults.length > 0){
+        if (requestCode == REQUEST_PERMISSIONS && grantResults.length > 0){
             startCameraActivity();
         }
+    }
+
+    private void startCameraActivity() {
+
+        Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        if (cameraIntent.resolveActivity(getActivity().getPackageManager()) != null) {
+            tempFile = null;
+            try {
+                tempFile = createImageFile();
+            } catch (IOException ex) {
+                Toast.makeText(getContext(), "이미지 생성 오류", Toast.LENGTH_SHORT).show();
+                ex.printStackTrace();
+            }
+
+            if (tempFile != null) {
+                Uri photoUri = FileProvider.getUriForFile(getContext(),
+                        "com.example.queenstagram.provider", tempFile);
+                cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoUri);
+                extras = new Bundle();
+                extras.putString("photoUriString", photoUri.toString());
+                cameraIntent.putExtra("extras", extras);
+                startActivityForResult(cameraIntent, REQUEST_CAMERA_ACTIVITY);
+            }
+        }
+    }
+
+    String currentPhotoPath;
+    private File createImageFile() throws IOException {
+
+        File storageDir = getContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        File image = File.createTempFile(
+                makeImageFileName(),  /* prefix */
+                ".png",         /* suffix */
+                storageDir      /* directory */
+        );
+
+        // Save a file: path for use with ACTION_VIEW intents
+        currentPhotoPath = image.getAbsolutePath();
+        return image;
+    }
+
+    private String makeImageFileName() {
+
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMdd_hhmmss");
+        Date date = new Date();
+        String strDate = simpleDateFormat.format(date);
+        return strDate;
     }
 
     @Override
@@ -125,11 +175,10 @@ public class TimelineFragment extends Fragment {
         super.onActivityResult(requestCode, resultCode, data);
 
         // Main (TimelineFrag) -> Camera -> Main -> Post
-        if (resultCode == Activity.RESULT_OK && requestCode == 2){
+        if (resultCode == Activity.RESULT_OK && requestCode == REQUEST_CAMERA_ACTIVITY){
 
             Intent startIntent = new Intent(getActivity(), PostActivity.class);
-            Bitmap imgBitmap = (Bitmap) data.getExtras().get("data");
-            startIntent.putExtra("photo", imgBitmap); // 액티비티 호출하면서 촬영된 이미지 전송
+            startIntent.putExtra("extras", extras); // 액티비티 호출하면서 촬영된 이미지 전송
             startActivity(startIntent);
         }
     }

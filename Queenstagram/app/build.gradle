@@ -7,7 +7,7 @@ android {
 
     defaultConfig {
         applicationId "com.example.queenstagram"
-        minSdkVersion 16
+        minSdkVersion 24
         targetSdkVersion 29
         multiDexEnabled true
         versionCode 1
