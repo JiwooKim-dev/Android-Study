@@ -42,7 +42,7 @@ public class PostAdapter extends RecyclerView.Adapter<PostViewHolder> {
 
         holder.tvUserName.setText(item.getUploader());
         holder.tvPostText.setText(item.getText());
-        holder.tvLikeCount.setText(String.valueOf(item.getLikes().getCount()));
+        holder.tvLikeCount.setText(String.valueOf(item.getLikesCount()));
         Glide.with(context).load(item.getImageUrl()).centerCrop().into(holder.ivImg);
     }
 

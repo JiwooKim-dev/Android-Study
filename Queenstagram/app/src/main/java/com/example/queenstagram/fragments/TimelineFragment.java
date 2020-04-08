@@ -8,6 +8,7 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Parcelable;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -36,6 +37,7 @@ import com.google.firebase.firestore.QuerySnapshot;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -45,6 +47,7 @@ public class TimelineFragment extends Fragment {
     static final int REQUEST_PERMISSIONS = 1;
     static final int REQUEST_CAMERA_ACTIVITY = 2;
 
+    FirebaseFirestore db;
     ArrayList<Api.Post> arrayList;
     PostAdapter postAdapter;
 
@@ -89,7 +92,7 @@ public class TimelineFragment extends Fragment {
         final String TAG = "CloudFirebase";
 
         // Access a Cloud Firestore instance
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        db = FirebaseFirestore.getInstance();
 
         db.collection("posts")
                 .get()
@@ -106,6 +109,7 @@ public class TimelineFragment extends Fragment {
                         }
                     }
                 });
+
     }
 
 

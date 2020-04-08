@@ -39,6 +39,7 @@ public class PostActivity extends AppCompatActivity {
     ImageView ivPost;
     EditText etText, etUploader;
     Uri photoUri;
+    Bundle extras;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,14 +60,14 @@ public class PostActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 uploadFB(etUploader.getText().toString(), etText.getText().toString(), photoUri.toString());
-                
+                Log.d("post", "포스팅 완료");
             }
         });
     }
 
     private void showImage() throws IOException {
 
-        Bundle extras = getIntent().getBundleExtra("extras");
+        extras = getIntent().getBundleExtra("extras");
         photoUri = Uri.parse(extras.getString("photoUriString"));
         Bitmap originalImgBitmap = getBitmapFromUri(photoUri);
         ivPost.setImageBitmap(originalImgBitmap);
@@ -158,10 +159,9 @@ public class PostActivity extends AppCompatActivity {
 
     private void uploadFB(String uploaderString, String textString, String uriString){
 
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-
         Api.Post newPost = new Api.Post(uploaderString, textString, uriString, new Date());
         newPost.setImageUrl("https://i.pinimg.com/originals/0b/56/af/0b56af0c2ff8a777e75bc651e0c969cb.jpg");    // 임시 이미지 링크
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
         db.collection("posts").document(makeDocName()).set(newPost);
     }
 

@@ -27,7 +27,8 @@ public class Api {
         int id = 1;
         String uploader;
         String text;
-        Likes likes;
+        // Likes likes;
+        int likesCount;
         Date created_at;
         Date updated_at;
         String imageUrl;
@@ -37,8 +38,11 @@ public class Api {
         public Post(String uploader, String text, String imageUrl, Date created_at) {
             // defaults
             this.id = id++;
+            this.likesCount = 100;
+            /*
             this.likes.count = 0;
             this.likes.userliked = false;
+            */
             // user's values
             this.uploader = uploader;
             this.text = text;
@@ -47,60 +51,60 @@ public class Api {
             this.imageUrl = imageUrl;
         }
 
-        public void setId(int id) {
-            this.id = id;
-        }
-
-        public void setUploader(String uploader) {
-            this.uploader = uploader;
-        }
-
-        public void setText(String text) {
-            this.text = text;
-        }
-
-        public void setLikes(Likes likes) {
-            this.likes = likes;
-        }
-
-        public void setCreated_at(Date created_at) {
-            this.created_at = created_at;
-        }
-
-        public void setUpdated_at(Date updated_at) {
-            this.updated_at = updated_at;
-        }
-
-        public void setImageUrl(String imageUrl) {
-            this.imageUrl = imageUrl;
-        }
-
         public int getId() {
             return id;
+        }
+
+        public void setId(int id) {
+            this.id = id;
         }
 
         public String getUploader() {
             return uploader;
         }
 
+        public void setUploader(String uploader) {
+            this.uploader = uploader;
+        }
+
         public String getText() {
             return text;
         }
 
-        public Likes getLikes() {
-            return likes;
+        public void setText(String text) {
+            this.text = text;
+        }
+
+        public int getLikesCount() {
+            return likesCount;
+        }
+
+        public void setLikesCount(int likesCount) {
+            this.likesCount = likesCount;
         }
 
         public Date getCreated_at() {
             return created_at;
         }
 
+        public void setCreated_at(Date created_at) {
+            this.created_at = created_at;
+        }
+
         public Date getUpdated_at() {
             return updated_at;
         }
 
+        public void setUpdated_at(Date updated_at) {
+            this.updated_at = updated_at;
+        }
+
         public String getImageUrl() {
             return imageUrl;
+        }
+
+        public void setImageUrl(String imageUrl) {
+            this.imageUrl = imageUrl;
         }
     }
 
