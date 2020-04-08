@@ -1,11 +1,13 @@
 package com.example.queenstagram;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.media.ExifInterface;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.ParcelFileDescriptor;
@@ -18,17 +20,24 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.queenstagram.api.Api;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.RequestBody;
+import com.squareup.okhttp.Response;
+
 import java.io.File;
 import java.io.FileDescriptor;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 public class PostActivity extends AppCompatActivity {
 
     ImageView ivPost;
-    EditText etText;
+    EditText etText, etUploader;
     Uri photoUri;
 
     @Override
@@ -44,11 +53,13 @@ public class PostActivity extends AppCompatActivity {
             e.printStackTrace();
         }
 
-        etText = (EditText) findViewById(R.id.et_text);
+        etUploader = findViewById(R.id.et_uploader);
+        etText = findViewById(R.id.et_text);
         findViewById(R.id.btn_post).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                //postToFB(photoUri.toString(), etText.getText().toString());
+                uploadFB(etUploader.getText().toString(), etText.getText().toString(), photoUri.toString());
+                
             }
         });
     }
@@ -144,4 +155,22 @@ public class PostActivity extends AppCompatActivity {
         matrix.postRotate(degree);
         return Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
     }   /* 비트맵을 각도대로 회전시켜 결과를 반환 */
+
+    private void uploadFB(String uploaderString, String textString, String uriString){
+
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+        Api.Post newPost = new Api.Post(uploaderString, textString, uriString, new Date());
+        newPost.setImageUrl("https://i.pinimg.com/originals/0b/56/af/0b56af0c2ff8a777e75bc651e0c969cb.jpg");    // 임시 이미지 링크
+        db.collection("posts").document(makeDocName()).set(newPost);
+    }
+
+    private String makeDocName() {
+
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMdd_hhmm");
+        Date date = new Date();
+        String strDate = simpleDateFormat.format(date);
+        return "post_"+strDate;
+    }
+
 }

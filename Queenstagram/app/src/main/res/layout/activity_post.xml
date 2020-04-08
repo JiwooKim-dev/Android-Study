@@ -12,6 +12,14 @@
         android:layout_width="match_parent"
         android:layout_height="400dp" />
 
+
+    <EditText
+        android:id="@+id/et_uploader"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Uploader"/>
+
+
     <EditText
         android:id="@+id/et_text"
         android:layout_width="match_parent"

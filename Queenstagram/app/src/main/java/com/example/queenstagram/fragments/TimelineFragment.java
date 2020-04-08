@@ -147,7 +147,6 @@ public class TimelineFragment extends Fragment {
         }
     }
 
-    String currentPhotoPath;
     private File createImageFile() throws IOException {
 
         File storageDir = getContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES);
@@ -157,8 +156,6 @@ public class TimelineFragment extends Fragment {
                 storageDir      /* directory */
         );
 
-        // Save a file: path for use with ACTION_VIEW intents
-        currentPhotoPath = image.getAbsolutePath();
         return image;
     }
 
