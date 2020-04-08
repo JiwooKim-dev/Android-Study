@@ -10,19 +10,19 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.example.queenstagram.R;
+import com.example.queenstagram.api.Api;
 import com.example.queenstagram.posts.PostItem;
-import com.example.queenstagram.R;
 
 import java.util.ArrayList;
 
 public class PostAdapter extends RecyclerView.Adapter<PostViewHolder> {
 
     private Context context;
-    private ArrayList<PostItem> postItems;
+    private ArrayList<Api.Post> postItems;
 
-    public PostAdapter(Context context, ArrayList<PostItem> listItem) {
+    public PostAdapter(Context context, ArrayList<Api.Post> postItems) {
         this.context = context;
-        postItems = listItem;
+        this.postItems = postItems;
     }
 
     @NonNull
@@ -38,11 +38,12 @@ public class PostAdapter extends RecyclerView.Adapter<PostViewHolder> {
     @Override
     public void onBindViewHolder(@NonNull PostViewHolder holder, int position) {
 
-        PostItem item = postItems.get(position);
-        holder.tvUserName.setText(item.getUserName());
-        holder.tvPostText.setText(item.getPostText());
-        holder.tvLikeCount.setText(String.valueOf(item.getPostLikeCount()));
-        Glide.with(context).load(item.getPostImgUrl()).into(holder.ivImg);
+        Api.Post item = postItems.get(position);
+
+        holder.tvUserName.setText(item.getUploader());
+        holder.tvPostText.setText(item.getText());
+        holder.tvLikeCount.setText(String.valueOf(item.getLikes().getCount()));
+        Glide.with(context).load(item.getImageUrl()).centerCrop().into(holder.ivImg);
     }
 
     @Override
@@ -52,7 +53,7 @@ public class PostAdapter extends RecyclerView.Adapter<PostViewHolder> {
 
     public void onLikeClicked(int position) {
 
-        PostItem item = postItems.get(position);
+        Api.Post item = postItems.get(position);
         Toast.makeText(context, "좋아요", Toast.LENGTH_SHORT).show();
     }
 }
