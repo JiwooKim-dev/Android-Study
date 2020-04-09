@@ -24,7 +24,7 @@ public class Api {
 
     public static class Post {
 
-        int id = 1;
+        int id;
         String uploader;
         String text;
         // Likes likes;
@@ -35,9 +35,9 @@ public class Api {
 
         public Post() {}
 
-        public Post(String uploader, String text, String imageUrl, Date created_at) {
+        public Post(String uploader, String text, Date created_at) {
             // defaults
-            this.id = id++;
+            this.id = -1;
             this.likesCount = 100;
             /*
             this.likes.count = 0;
@@ -48,7 +48,6 @@ public class Api {
             this.text = text;
             this.created_at = created_at;
             this.updated_at = created_at;
-            this.imageUrl = imageUrl;
         }
 
         public int getId() {

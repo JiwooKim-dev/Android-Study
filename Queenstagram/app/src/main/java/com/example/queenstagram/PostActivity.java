@@ -1,45 +1,48 @@
 package com.example.queenstagram;
 
-import android.app.ProgressDialog;
-import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.media.ExifInterface;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.ParcelFileDescriptor;
-import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.queenstagram.api.Api;
+import com.google.android.gms.tasks.Continuation;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.RequestBody;
-import com.squareup.okhttp.Response;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 
-import java.io.File;
+import java.io.ByteArrayOutputStream;
 import java.io.FileDescriptor;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.concurrent.TimeUnit;
 
 public class PostActivity extends AppCompatActivity {
 
     ImageView ivPost;
     EditText etText, etUploader;
-    Uri photoUri;
+
     Bundle extras;
+    Uri photoUri;
+    Bitmap originalImgBitmap;
+
+    Api.Post newPost;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,8 +62,7 @@ public class PostActivity extends AppCompatActivity {
         findViewById(R.id.btn_post).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                uploadFB(etUploader.getText().toString(), etText.getText().toString(), photoUri.toString());
-                Log.d("post", "포스팅 완료");
+                upload(etUploader.getText().toString(), etText.getText().toString());
             }
         });
     }
@@ -69,7 +71,7 @@ public class PostActivity extends AppCompatActivity {
 
         extras = getIntent().getBundleExtra("extras");
         photoUri = Uri.parse(extras.getString("photoUriString"));
-        Bitmap originalImgBitmap = getBitmapFromUri(photoUri);
+        originalImgBitmap = getBitmapFromUri(photoUri);
         ivPost.setImageBitmap(originalImgBitmap);
     }
 
@@ -157,20 +159,72 @@ public class PostActivity extends AppCompatActivity {
         return Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
     }   /* 비트맵을 각도대로 회전시켜 결과를 반환 */
 
-    private void uploadFB(String uploaderString, String textString, String uriString){
+    private void upload(final String uploaderString, String textString){
 
-        Api.Post newPost = new Api.Post(uploaderString, textString, uriString, new Date());
-        newPost.setImageUrl("https://i.pinimg.com/originals/0b/56/af/0b56af0c2ff8a777e75bc651e0c969cb.jpg");    // 임시 이미지 링크
+        newPost = new Api.Post(uploaderString, textString, new Date());
         FirebaseFirestore db = FirebaseFirestore.getInstance();
-        db.collection("posts").document(makeDocName()).set(newPost);
-    }
+        db.collection("posts").add(newPost)
+            .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+            @Override
+            public void onSuccess(DocumentReference documentReference) {
+                String docID = documentReference.getId();   // 1. 문서 생성 후 ID 발급
+                uploadImageToStorage(docID);                // 2. Storage에 이미지 업로드 후 URI 발급
+                                                            // 2-1. Cloud FB의 Post에 URI 등록
+            }
+        });
+    }   /* Firebase 업로드 */
 
-    private String makeDocName() {
+    private void uploadImageToStorage(final String docID) {
 
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMdd_hhmm");
-        Date date = new Date();
-        String strDate = simpleDateFormat.format(date);
-        return "post_"+strDate;
-    }
+        FirebaseStorage storage = FirebaseStorage.getInstance();
+        StorageReference storageRef = storage.getReference();
+        final StorageReference imageRef = storageRef.child(newPost.getUploader() + "/" + docID);
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        originalImgBitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+        byte[] data = baos.toByteArray();
+
+        final UploadTask uploadTask = imageRef.putBytes(data);
+        Task<Uri> urlTask = uploadTask.continueWithTask(new Continuation<UploadTask.TaskSnapshot, Task<Uri>>() {
+            @Override
+            public Task<Uri> then(@NonNull Task<UploadTask.TaskSnapshot> task) throws Exception {
+                if (!task.isSuccessful()) {
+                    throw task.getException();
+                }
+
+                // Continue with the task to get the download URL
+                return imageRef.getDownloadUrl();
+            }
+        }).addOnCompleteListener(new OnCompleteListener<Uri>() {
+            @Override
+            public void onComplete(@NonNull Task<Uri> task) {
+                if (task.isSuccessful()) {
+                    Log.d("Storage", "이미지 업로드 성공");
+                    Uri downloadUri = task.getResult();
+                    updatePostUriInCloud(docID, downloadUri);
+                } else {
+                    Log.d("Storage", "이미지 업로드 실패");
+                }
+            }
+        });
+    }   /* 촬영된 이미지를 Firebase Storage에 업로드 */
+
+    private void updatePostUriInCloud(String docID, Uri downloadUri) {
+
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        db.collection("posts").document(docID).update("imageUrl", downloadUri.toString())
+            .addOnSuccessListener(new OnSuccessListener<Void>() {
+                @Override
+                public void onSuccess(Void aVoid) {
+                    Log.d("Cloud FB", "포스트 URI 업데이트 성공");
+                }
+            })
+            .addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    Log.d("Cloud FB", "포스트 URI 업데이트 실패");
+                }
+            });
+    }   /* 저장된 이미지의 URL을 Post에 업데이트 */
 
 }
