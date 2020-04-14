@@ -24,37 +24,60 @@ public class Api {
 
     public static class Post {
 
-        int id;
+        String id;
         String uploader;
         String text;
-        // Likes likes;
         int likesCount;
+        boolean userLiked;
+        String likeId;
         Date created_at;
         Date updated_at;
         String imageUrl;
 
         public Post() {}
 
-        public Post(String uploader, String text, Date created_at) {
+        public Post(String id, String uploader, String text, Date created_at) {
             // defaults
-            this.id = -1;
             this.likesCount = 100;
-            /*
-            this.likes.count = 0;
-            this.likes.userliked = false;
-            */
+            this.userLiked = false;
             // user's values
+            this.id = id;
             this.uploader = uploader;
             this.text = text;
             this.created_at = created_at;
             this.updated_at = created_at;
         }
 
-        public int getId() {
+        public Post(String id, String uploader, String text, Date created_at, Date updated_at, String imageUrl) {
+            this.id = id;
+            this.uploader = uploader;
+            this.text = text;
+            this.created_at = created_at;
+            this.updated_at = updated_at;
+            this.imageUrl = imageUrl;
+        }
+
+        public String getLikeId() {
+            return likeId;
+        }
+
+        public void setLikeId(String likeId) {
+            this.likeId = likeId;
+        }
+
+        public boolean isUserLiked() {
+            return userLiked;
+        }
+
+        public void setUserLiked(boolean userLiked) {
+            this.userLiked = userLiked;
+        }
+
+        public String getId() {
             return id;
         }
 
-        public void setId(int id) {
+        public void setId(String id) {
             this.id = id;
         }
 
@@ -106,26 +129,4 @@ public class Api {
             this.imageUrl = imageUrl;
         }
     }
-
-    public static class Likes {
-        int count;
-        boolean userliked;
-
-        public int getCount() {
-            return count;
-        }
-
-        public void setCount(int count) {
-            this.count = count;
-        }
-
-        public boolean isUserliked() {
-            return userliked;
-        }
-
-        public void setUserliked(boolean userliked) {
-            this.userliked = userliked;
-        }
-    }
-
 }

@@ -29,8 +29,12 @@ import com.example.queenstagram.PostActivity;
 import com.example.queenstagram.api.Api;
 import com.example.queenstagram.posts.recyclerview.PostAdapter;
 import com.example.queenstagram.R;
+import com.example.queenstagram.uuid.UserUUID;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
@@ -93,20 +97,54 @@ public class TimelineFragment extends Fragment {
 
         // Access a Cloud Firestore instance
         db = FirebaseFirestore.getInstance();
+        CollectionReference postsRef = db.collection("posts");
 
-        db.collection("posts")
-                .get()
-                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                    @Override
-                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                        if (task.isSuccessful()) {
-                            for (QueryDocumentSnapshot document : task.getResult()) {
-                                arrayList.add(document.toObject(Api.Post.class));
-                            }
-                            postAdapter.notifyDataSetChanged();
-                        } else {
-                            Log.w(TAG, "Error fetching Cloud FB", task.getException());
+        postsRef.get()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        for (QueryDocumentSnapshot document : task.getResult()) {
+                            // arrayList.add(document.toObject(Api.Post.class));
+                            Api.Post post = new Api.Post(
+                                    document.getId(),
+                                    document.getString("uploader"),
+                                    document.getString("text"),
+                                    document.getDate("created_at"),
+                                    document.getDate("updated_at"),
+                                    document.getString("imageUrl")
+                            );
+
+                            DocumentReference postRef = document.getReference();
+                            CollectionReference likesRef = postRef.collection("likes");
+
+                            likesRef.get()
+                                    .addOnCompleteListener(task1 -> {
+                                        if (task1.isSuccessful()){
+                                            QuerySnapshot likesResult = task1.getResult();
+                                            int likesCount = likesResult.size();
+                                            post.setLikesCount(likesCount);
+
+                                            likesRef.whereEqualTo("userName", UserUUID.getUserUUID(getActivity()))
+                                                    .get()
+                                                    .addOnCompleteListener(task2 -> {
+                                                       if (task2.getResult().size() > 0){
+                                                           // 좋아요 누름
+                                                           post.setUserLiked(true);
+                                                           DocumentSnapshot likeDoc = task2.getResult().getDocuments().get(0);  // 좋아요가 하나일수밖에 없으니까 일단 (0)
+                                                           post.setLikeId(likeDoc.getId());
+                                                       }
+                                                       else {
+                                                           // 좋아요 안누름
+                                                           post.setUserLiked(false);
+                                                       }
+
+                                                       arrayList.add(post);
+                                                       postAdapter.notifyDataSetChanged();
+                                                    });
+                                        }
+                                    });
                         }
+                    } else {
+                        Log.w(TAG, "Error fetching Cloud FB", task.getException());
                     }
                 });
 

@@ -13,7 +13,7 @@ import com.example.queenstagram.R;
 public class PostViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
 
     public CheckBox cbLike;
-    public ImageView ivImg, ivLike, ivShare;
+    public ImageView ivImg, ivShare;
     public TextView tvLikeCount, tvUserName, tvPostText;
     private PostAdapter adapter;
 

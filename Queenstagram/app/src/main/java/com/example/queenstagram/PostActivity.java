@@ -17,6 +17,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.queenstagram.api.Api;
+import com.example.queenstagram.uuid.UserUUID;
 import com.google.android.gms.tasks.Continuation;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
@@ -36,7 +37,7 @@ import java.util.Date;
 public class PostActivity extends AppCompatActivity {
 
     ImageView ivPost;
-    EditText etText, etUploader;
+    EditText etText;
 
     Bundle extras;
     Uri photoUri;
@@ -57,12 +58,11 @@ public class PostActivity extends AppCompatActivity {
             e.printStackTrace();
         }
 
-        etUploader = findViewById(R.id.et_uploader);
         etText = findViewById(R.id.et_text);
         findViewById(R.id.btn_post).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                upload(etUploader.getText().toString(), etText.getText().toString());
+                upload(etText.getText().toString());
             }
         });
     }
@@ -159,9 +159,9 @@ public class PostActivity extends AppCompatActivity {
         return Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
     }   /* 비트맵을 각도대로 회전시켜 결과를 반환 */
 
-    private void upload(final String uploaderString, String textString){
+    private void upload(String textString){
 
-        newPost = new Api.Post(uploaderString, textString, new Date());
+        newPost = new Api.Post("-1", UserUUID.getUserUUID(this), textString, new Date());
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         db.collection("posts").add(newPost)
             .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
@@ -178,7 +178,7 @@ public class PostActivity extends AppCompatActivity {
 
         FirebaseStorage storage = FirebaseStorage.getInstance();
         StorageReference storageRef = storage.getReference();
-        final StorageReference imageRef = storageRef.child(newPost.getUploader() + "/" + docID);
+        final StorageReference imageRef = storageRef.child(UserUUID.getUserUUID(this) + "/" + docID);
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         originalImgBitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
@@ -212,19 +212,20 @@ public class PostActivity extends AppCompatActivity {
     private void updatePostUriInCloud(String docID, Uri downloadUri) {
 
         FirebaseFirestore db = FirebaseFirestore.getInstance();
-        db.collection("posts").document(docID).update("imageUrl", downloadUri.toString())
-            .addOnSuccessListener(new OnSuccessListener<Void>() {
-                @Override
-                public void onSuccess(Void aVoid) {
-                    Log.d("Cloud FB", "포스트 URI 업데이트 성공");
-                }
-            })
-            .addOnFailureListener(new OnFailureListener() {
-                @Override
-                public void onFailure(@NonNull Exception e) {
-                    Log.d("Cloud FB", "포스트 URI 업데이트 실패");
-                }
-            });
+        db.collection("posts").document(docID)
+                .update("imageUrl", downloadUri.toString())
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        Log.d("Cloud FB", "포스트 URI 업데이트 성공");
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.d("Cloud FB", "포스트 URI 업데이트 실패");
+                    }
+                });
     }   /* 저장된 이미지의 URL을 Post에 업데이트 */
 
 }
