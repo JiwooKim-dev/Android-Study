@@ -8,7 +8,6 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.Parcelable;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -30,14 +29,14 @@ import com.example.queenstagram.api.Api;
 import com.example.queenstagram.posts.recyclerview.PostAdapter;
 import com.example.queenstagram.R;
 import com.example.queenstagram.uuid.UserUUID;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
+import com.google.firebase.firestore.core.OrderBy;
 
 import java.io.File;
 import java.io.IOException;
@@ -99,7 +98,8 @@ public class TimelineFragment extends Fragment {
         db = FirebaseFirestore.getInstance();
         CollectionReference postsRef = db.collection("posts");
 
-        postsRef.get()
+        postsRef.orderBy("created_at", Query.Direction.DESCENDING)
+                .get()
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
                         for (QueryDocumentSnapshot document : task.getResult()) {

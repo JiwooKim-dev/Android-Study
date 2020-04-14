@@ -78,7 +78,6 @@ public class PostAdapter extends RecyclerView.Adapter<PostViewHolder> {
             DocumentReference userLikeRef = likesRef.document(post.getLikeId());
             userLikeRef.delete()
                     .addOnCompleteListener(task -> {
-                        postViewHolder.cbLike.setChecked(false);
                         Toast.makeText(context, "좋아요 취소", Toast.LENGTH_SHORT).show();
                     });
         }
@@ -89,11 +88,8 @@ public class PostAdapter extends RecyclerView.Adapter<PostViewHolder> {
             likeMap.put("userName", UserUUID.getUserUUID((Activity) context));
             likesRef.add(likeMap)
                     .addOnCompleteListener(task -> {
-                        postViewHolder.cbLike.setChecked(true);
                         Toast.makeText(context, "좋아요", Toast.LENGTH_SHORT).show();
                     });
-
         }
-        notifyDataSetChanged();
     }
 }

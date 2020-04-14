@@ -161,7 +161,7 @@ public class PostActivity extends AppCompatActivity {
 
     private void upload(String textString){
 
-        newPost = new Api.Post("-1", UserUUID.getUserUUID(this), textString, new Date());
+        newPost = new Api.Post("-1", UserUUID.getUserUUID(this), textString, new Date());   // timestamp?
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         db.collection("posts").add(newPost)
             .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
@@ -228,4 +228,5 @@ public class PostActivity extends AppCompatActivity {
                 });
     }   /* 저장된 이미지의 URL을 Post에 업데이트 */
 
+    /** onActivityResult() 구현 **/
 }
